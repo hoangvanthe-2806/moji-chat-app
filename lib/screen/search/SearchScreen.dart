@@ -6,7 +6,6 @@ import 'search_state.dart';
 
 class SearchScreen extends StatelessWidget {
   static const String route = '/search';
-
   final TextEditingController _controller = TextEditingController();
 
   SearchScreen({super.key});
@@ -16,10 +15,7 @@ class SearchScreen extends StatelessWidget {
     return BlocProvider(
       create: (_) => SearchCubit(FriendService()),
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Tìm bạn bè'),
-          centerTitle: true,
-        ),
+        appBar: AppBar(title: const Text('Tìm bạn bè')),
         body: BlocBuilder<SearchCubit, SearchState>(
           builder: (context, state) {
             final cubit = context.read<SearchCubit>();
@@ -27,7 +23,7 @@ class SearchScreen extends StatelessWidget {
             return Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(12.0),
+                  padding: const EdgeInsets.all(12),
                   child: TextField(
                     controller: _controller,
                     decoration: InputDecoration(
@@ -43,25 +39,22 @@ class SearchScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 if (state.isLoading)
                   const Center(child: CircularProgressIndicator()),
-
                 if (state.error != null)
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(8),
                     child: Text(
                       state.error!,
                       style: const TextStyle(color: Colors.red),
                     ),
                   ),
-
                 Expanded(
                   child: ListView.builder(
                     itemCount: state.results.length,
                     itemBuilder: (context, index) {
                       final user = state.results[index];
-                      final bool sent = user['requestSent'] == true;
+                      final sent = user['requestSent'] == true;
 
                       return ListTile(
                         leading: CircleAvatar(

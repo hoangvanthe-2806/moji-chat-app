@@ -1,10 +1,15 @@
-part of 'friend_request_cubit.dart';
+abstract class FriendRequestState {}
 
-sealed class FriendRequestState extends Equatable {
-  const FriendRequestState();
+class FriendRequestInitial extends FriendRequestState {}
+
+class FriendRequestLoading extends FriendRequestState {}
+
+class FriendRequestLoaded extends FriendRequestState {
+  final List<Map<String, dynamic>> requests;
+  FriendRequestLoaded(this.requests);
 }
 
-final class FriendRequestInitial extends FriendRequestState {
-  @override
-  List<Object> get props => [];
+class FriendRequestError extends FriendRequestState {
+  final String message;
+  FriendRequestError(this.message);
 }

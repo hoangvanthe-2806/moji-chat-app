@@ -1,10 +1,15 @@
-part of 'friend_list_cubit.dart';
+abstract class FriendListState {}
 
-sealed class FriendListState extends Equatable {
-  const FriendListState();
+class FriendListInitial extends FriendListState {}
+
+class FriendListLoading extends FriendListState {}
+
+class FriendListLoaded extends FriendListState {
+  final List<Map<String, dynamic>> friends;
+  FriendListLoaded(this.friends);
 }
 
-final class FriendListInitial extends FriendListState {
-  @override
-  List<Object> get props => [];
+class FriendListError extends FriendListState {
+  final String message;
+  FriendListError(this.message);
 }
