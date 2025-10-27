@@ -16,4 +16,12 @@ class FriendListCubit extends Cubit<FriendListState> {
       emit(FriendListError(e.toString()));
     }
   }
+  Future<void> removeFriend(String friendId) async {
+    try {
+      await _service.removeFriend(friendId);
+      await loadFriends(); // tải lại danh sách sau khi xóa
+    } catch (e) {
+      emit(FriendListError(e.toString()));
+    }
+  }
 }
