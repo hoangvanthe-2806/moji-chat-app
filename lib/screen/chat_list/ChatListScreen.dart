@@ -29,14 +29,42 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
   Future<void> fetchUsers() async {
     try {
-      final response = await supabase.from('users').select();
+      // Lấy danh sách cuộc trò chuyện có mình tham gia
+      final conversations = await supabase
+          .from('conversations')
+          .select('id, user1_id, user2_id')
+          .or('user1_id.eq.$currentUserId,user2_id.eq.$currentUserId');
+
+      // Lấy ra ID của những người đã chat với mình
+      final Set<String> friendIds = {};
+      for (var conv in conversations) {
+        final user1 = conv['user1_id'];
+        final user2 = conv['user2_id'];
+        if (user1 != currentUserId) friendIds.add(user1);
+        if (user2 != currentUserId) friendIds.add(user2);
+      }
+
+      // Nếu không có ai, danh sách rỗng
+      if (friendIds.isEmpty) {
+        setState(() {
+          users = [];
+          isLoading = false;
+        });
+        return;
+      }
+
+      // Lấy thông tin user từ bảng users
+      final response = await supabase
+          .from('users')
+          .select()
+          .filter('id', 'in', friendIds.toList());
+
       setState(() {
-        // Lọc bỏ chính mình
-        users = response.where((u) => u['id'] != currentUserId).toList();
+        users = response;
         isLoading = false;
       });
     } catch (e) {
-      print('Lỗi lấy users: $e');
+      print('Lỗi lấy danh sách bạn chat: $e');
       setState(() => isLoading = false);
     }
   }

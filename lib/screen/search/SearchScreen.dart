@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/friend_service.dart';
+import '../chat_detail/ChatDetailScreen.dart';
 import 'search_cubit.dart';
 import 'search_state.dart';
 
@@ -19,6 +21,8 @@ class SearchScreen extends StatelessWidget {
         body: BlocBuilder<SearchCubit, SearchState>(
           builder: (context, state) {
             final cubit = context.read<SearchCubit>();
+            final supabase = Supabase.instance.client;
+            final myId = supabase.auth.currentUser?.id ?? "";
 
             return Column(
               children: [
@@ -39,8 +43,10 @@ class SearchScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+
                 if (state.isLoading)
                   const Center(child: CircularProgressIndicator()),
+
                 if (state.error != null)
                   Padding(
                     padding: const EdgeInsets.all(8),
@@ -49,33 +55,60 @@ class SearchScreen extends StatelessWidget {
                       style: const TextStyle(color: Colors.red),
                     ),
                   ),
+
                 Expanded(
                   child: ListView.builder(
                     itemCount: state.results.length,
                     itemBuilder: (context, index) {
                       final user = state.results[index];
-                      final sent = user['requestSent'] == true;
+
+                      final bool isFriend = user['isFriend'] == true;
+                      final bool requestSent = user['requestSent'] == true;
 
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundImage: user['avatar_url'] != null
+                          backgroundImage: (user['avatar_url'] != null &&
+                              user['avatar_url'].toString().isNotEmpty)
                               ? NetworkImage(user['avatar_url'])
                               : null,
-                          child: user['avatar_url'] == null
+                          child: (user['avatar_url'] == null ||
+                              user['avatar_url'].toString().isEmpty)
                               ? const Icon(Icons.person)
                               : null,
                         ),
                         title: Text(user['name'] ?? 'Không rõ tên'),
                         subtitle: Text(user['email'] ?? ''),
-                        trailing: ElevatedButton(
-                          onPressed: sent
+                        trailing: isFriend
+                            ? ElevatedButton(
+                          onPressed: () async {
+                            final conversationId =
+                            await cubit.getOrCreateConversation(
+                                user['id']);
+
+                            Navigator.pushNamed(
+                              context,
+                              ChatDetailScreen.route,
+                              arguments: {
+                                'conversationId': conversationId,
+                                'senderId': myId,
+                                'receiverId': user['id'],
+                                'receiverName': user['name'],
+                              },
+                            );
+                          },
+                          child: const Text("Nhắn tin"),
+                        )
+                            : ElevatedButton(
+                          onPressed: requestSent
                               ? null
                               : () => cubit.sendRequest(user['id']),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                            sent ? Colors.grey : Colors.blueAccent,
+                            backgroundColor: requestSent
+                                ? Colors.grey
+                                : Colors.blueAccent,
                           ),
-                          child: Text(sent ? 'Đã gửi' : 'Kết bạn'),
+                          child: Text(
+                              requestSent ? 'Đã gửi' : 'Kết bạn'),
                         ),
                       );
                     },

@@ -18,17 +18,65 @@ class FriendService {
   }
 
   /// 🔍 Tìm người dùng (loại trừ chính mình)
+  /// 🔍 Tìm người dùng + kiểm tra đã gửi lời mời hay chưa
+  /// 🔍 Search user + trạng thái bạn bè / yêu cầu kết bạn
   Future<List<Map<String, dynamic>>> searchUsers(String query) async {
     final myId = _supabase.auth.currentUser!.id;
 
     final response = await _supabase
         .from('users')
-        .select('id, name, email, avatar_url')
+        .select('''
+        id,
+        name,
+        email,
+        avatar_url,
+
+        friend_requests:friend_requests!friend_requests_receiver_id_fkey(sender_id, receiver_id, status),
+
+        my_friends:friends!friends_user_id_fkey(friend_id),
+        their_friends:friends!friends_friend_id_fkey(user_id)
+      ''')
         .ilike('name', '%$query%')
         .neq('id', myId);
 
-    return List<Map<String, dynamic>>.from(response);
+    final list = List<Map<String, dynamic>>.from(response);
+
+    return list.map((user) {
+      // ✅ Đã gửi lời mời chưa?
+      bool requestSent = false;
+      final requests = user['friend_requests'];
+      if (requests is List && requests.isNotEmpty) {
+        requestSent = requests.any((r) =>
+        r['sender_id'] == myId && r['status'] == 'pending');
+      }
+
+      // ✅ Đã là bạn hay chưa? (Kiểm tra 2 chiều)
+      bool isFriend = false;
+
+      final myFriends = user['my_friends'];
+      if (myFriends is List && myFriends.isNotEmpty) {
+        isFriend = myFriends.any((f) => f['friend_id'] == myId);
+      }
+
+      final theirFriends = user['their_friends'];
+      if (!isFriend && theirFriends is List && theirFriends.isNotEmpty) {
+        isFriend = theirFriends.any((f) => f['user_id'] == myId);
+      }
+
+      return {
+        'id': user['id'],
+        'name': user['name'],
+        'email': user['email'],
+        'avatar_url': user['avatar_url'],
+        'requestSent': requestSent,
+        'isFriend': isFriend,
+      };
+    }).toList();
   }
+
+
+
+
 
   /// 📨 Gửi lời mời kết bạn
   Future<void> sendFriendRequest(String receiverId) async {
