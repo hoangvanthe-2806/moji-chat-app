@@ -18,4 +18,18 @@ class ProfileService {
 
     return UserModel.fromMap(data);
   }
+
+  // Thêm method kiểm tra trạng thái bạn bè
+  Future<bool> isFriend(String userId) async {
+    final myId = supabase.auth.currentUser?.id;
+    if (myId == null) return false;
+
+    final response = await supabase
+        .from('friends')
+        .select()
+        .or('and(user_id.eq.$myId,friend_id.eq.$userId),and(user_id.eq.$userId,friend_id.eq.$myId)')
+        .maybeSingle();
+
+    return response != null;
+  }
 }

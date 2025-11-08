@@ -1,3 +1,4 @@
+import 'package:authentication_with_supabase/screen/user_profile/UserProfileScreen.dart';
 import 'package:flutter/material.dart';
 import '../screen/home/HomeScreen.dart';
 import '../screen/login/LoginScreen.dart';
@@ -43,6 +44,15 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
       return MaterialPageRoute(builder: (_) => const FriendRequestScreen());
     case FriendListScreen.route:
       return MaterialPageRoute(builder: (_) => const FriendListScreen());
+    case UserProfileScreen.route:
+      final args = settings.arguments as Map<String, dynamic>;
+      return MaterialPageRoute(
+        builder: (_) => UserProfileScreen(
+          userId: args['userId'],
+          userName: args['userName'],
+        ),
+      );
+
     default:
       return MaterialPageRoute(
         builder: (_) => Scaffold(

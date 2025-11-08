@@ -78,39 +78,53 @@ class SearchScreen extends StatelessWidget {
                         ),
                         title: Text(user['name'] ?? 'Không rõ tên'),
                         subtitle: Text(user['email'] ?? ''),
-                        trailing: isFriend
-                            ? ElevatedButton(
-                          onPressed: () async {
-                            final conversationId =
-                            await cubit.getOrCreateConversation(
-                                user['id']);
-
-                            Navigator.pushNamed(
-                              context,
-                              ChatDetailScreen.route,
-                              arguments: {
-                                'conversationId': conversationId,
-                                'senderId': myId,
-                                'receiverId': user['id'],
-                                'receiverName': user['name'],
-                              },
-                            );
-                          },
-                          child: const Text("Nhắn tin"),
-                        )
-                            : ElevatedButton(
-                          onPressed: requestSent
-                              ? null
-                              : () => cubit.sendRequest(user['id']),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: requestSent
-                                ? Colors.grey
-                                : Colors.blueAccent,
-                          ),
-                          child: Text(
-                              requestSent ? 'Đã gửi' : 'Kết bạn'),
+                        onTap: () {
+                          Navigator.pushNamed(
+                            context,
+                            '/user_profile',
+                            arguments: {
+                              'userId': user['id'],
+                              'userName': user['name'] ?? 'Không rõ tên',
+                            },
+                          );
+                        },
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (isFriend)
+                              IconButton(
+                                icon: const Icon(Icons.message),
+                                onPressed: () async {
+                                  final conversationId =
+                                  await cubit.getOrCreateConversation(user['id']);
+                                  Navigator.pushNamed(
+                                    context,
+                                    ChatDetailScreen.route,
+                                    arguments: {
+                                      'conversationId': conversationId,
+                                      'senderId': myId,
+                                      'receiverId': user['id'],
+                                      'receiverName': user['name'],
+                                    },
+                                  );
+                                },
+                              )
+                            else
+                              ElevatedButton(
+                                onPressed: requestSent
+                                    ? null
+                                    : () => cubit.sendRequest(user['id']),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: requestSent
+                                      ? Colors.grey
+                                      : Colors.blueAccent,
+                                ),
+                                child: Text(requestSent ? 'Đã gửi' : 'Kết bạn'),
+                              ),
+                          ],
                         ),
                       );
+
                     },
                   ),
                 ),
