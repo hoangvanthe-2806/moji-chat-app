@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../models/friend_service.dart';
 import 'friend_request_cubit.dart';
 import 'friend_request_state.dart';
+import '../../../widgets/user_avatar.dart';
 
 class FriendRequestScreen extends StatefulWidget {
   const FriendRequestScreen({Key? key}) : super(key: key);
@@ -195,44 +196,11 @@ class _FriendRequestScreenState extends State<FriendRequestScreen> {
             ),
             child: Row(
               children: [
-                // Avatar
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isDark 
-                          ? const Color(0xFF2F2F2F)
-                          : const Color(0xFFDBDBDB),
-                      width: 0.5,
-                    ),
-                  ),
-                  child: ClipOval(
-                    child: senderAvatar != null && senderAvatar.isNotEmpty
-                        ? Image.network(
-                            senderAvatar,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: Colors.grey.shade200,
-                                child: const Icon(
-                                  Icons.person,
-                                  color: Colors.grey,
-                                  size: 32,
-                                ),
-                              );
-                            },
-                          )
-                        : Container(
-                            color: Colors.grey.shade200,
-                            child: const Icon(
-                              Icons.person,
-                              color: Colors.grey,
-                              size: 32,
-                            ),
-                          ),
-                  ),
+                // Avatar with online indicator
+                UserAvatar(
+                  avatarUrl: senderAvatar,
+                  size: 56,
+                  isOnline: sender['is_online'] == true,
                 ),
                 const SizedBox(width: 12),
                 // Name and time

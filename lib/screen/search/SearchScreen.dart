@@ -5,6 +5,7 @@ import '../../models/friend_service.dart';
 import '../chat_detail/ChatDetailScreen.dart';
 import 'search_cubit.dart';
 import 'search_state.dart';
+import '../../widgets/user_avatar.dart';
 
 class SearchScreen extends StatefulWidget {
   static const String route = '/search';
@@ -188,48 +189,11 @@ class _SearchScreenState extends State<SearchScreen> {
                                   ),
                                   child: Row(
                                     children: [
-                                      // Avatar
-                                      Container(
-                                        width: 56,
-                                        height: 56,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: isDark 
-                                                ? const Color(0xFF2F2F2F)
-                                                : const Color(0xFFDBDBDB),
-                                            width: 0.5,
-                                          ),
-                                        ),
-                                        child: ClipOval(
-                                          child: (user['avatar_url'] != null &&
-                                                  user['avatar_url']
-                                                      .toString()
-                                                      .isNotEmpty)
-                                              ? Image.network(
-                                                  user['avatar_url'],
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder:
-                                                      (context, error, stackTrace) {
-                                                    return Container(
-                                                      color: Colors.grey.shade200,
-                                                      child: const Icon(
-                                                        Icons.person,
-                                                        color: Colors.grey,
-                                                        size: 32,
-                                                      ),
-                                                    );
-                                                  },
-                                                )
-                                              : Container(
-                                                  color: Colors.grey.shade200,
-                                                  child: const Icon(
-                                                    Icons.person,
-                                                    color: Colors.grey,
-                                                    size: 32,
-                                                  ),
-                                                ),
-                                        ),
+                                      // Avatar with online indicator
+                                      UserAvatar(
+                                        avatarUrl: user['avatar_url']?.toString(),
+                                        size: 56,
+                                        isOnline: user['is_online'] == true,
                                       ),
                                       const SizedBox(width: 12),
                                       // Name

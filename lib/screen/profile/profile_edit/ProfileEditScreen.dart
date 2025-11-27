@@ -103,8 +103,19 @@ class _ProfileEditContentState extends State<_ProfileEditContent> {
               } else if (state is ProfileEditError) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(state.message),
+                    content: Text(
+                      state.message,
+                      style: const TextStyle(fontSize: 14),
+                    ),
                     backgroundColor: Colors.red,
+                    duration: const Duration(seconds: 8),
+                    action: SnackBarAction(
+                      label: 'Đóng',
+                      textColor: Colors.white,
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      },
+                    ),
                   ),
                 );
               }

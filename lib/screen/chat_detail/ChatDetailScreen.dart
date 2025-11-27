@@ -86,17 +86,68 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     final isMe = msg.senderId == widget.senderId;
                     return Align(
                       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: isMe ? Colors.blue : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          msg.content ?? '',
-                          style: TextStyle(
-                            color: isMe ? Colors.white : Colors.black,
+                      child: GestureDetector(
+                        onLongPress: isMe ? () {
+                          // Chỉ cho phép xóa tin nhắn của chính mình
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Xóa tin nhắn'),
+                              content: const Text('Bạn có chắc muốn xóa tin nhắn này?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Hủy'),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    Navigator.pop(context);
+                                    try {
+                                      await _chatService.deleteMessage(
+                                        msg.id,
+                                        widget.senderId,
+                                      );
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Đã xóa tin nhắn'),
+                                            backgroundColor: Colors.green,
+                                            duration: Duration(seconds: 2),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Lỗi: $e'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.red,
+                                  ),
+                                  child: const Text('Xóa'),
+                                ),
+                              ],
+                            ),
+                          );
+                        } : null,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: isMe ? Colors.blue : Colors.grey[300],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            msg.content ?? '',
+                            style: TextStyle(
+                              color: isMe ? Colors.white : Colors.black,
+                            ),
                           ),
                         ),
                       ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import '../../widgets/user_avatar.dart';
+import '../../models/chat_service.dart';
 import '../../models/chat_service.dart';
 import '../chat_detail/ChatDetailScreen.dart';
 
@@ -15,6 +17,7 @@ class ChatListScreen extends StatefulWidget {
 
 class _ChatListScreenState extends State<ChatListScreen> {
   final supabase = Supabase.instance.client;
+  final _chatService = ChatService();
   List<dynamic> users = [];
   bool isLoading = true;
 
@@ -209,8 +212,62 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   ),
                   itemBuilder: (context, index) {
                     final user = users[index];
-                    return InkWell(
-                      onTap: () async {
+                      return InkWell(
+                        onLongPress: () {
+                          // Hiển thị dialog xác nhận xóa conversation
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Xóa cuộc trò chuyện'),
+                              content: Text(
+                                'Bạn có chắc muốn xóa cuộc trò chuyện với ${user['name'] ?? 'người này'}? Tất cả tin nhắn sẽ bị xóa vĩnh viễn.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Hủy'),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    Navigator.pop(context);
+                                    try {
+                                      final conversationId = user['conversation_id'] as String?;
+                                      if (conversationId != null) {
+                                        await _chatService.deleteConversation(conversationId);
+                                        
+                                        // Reload danh sách
+                                        fetchUsers();
+                                        
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Đã xóa cuộc trò chuyện'),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Lỗi khi xóa: $e'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.red,
+                                  ),
+                                  child: const Text('Xóa'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        onTap: () async {
                         // Lấy current user
                         final currentUser = Supabase.instance.client.auth.currentUser;
 
@@ -274,45 +331,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
                         ),
                         child: Row(
                           children: [
-                            // Avatar
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: isDark 
-                                      ? const Color(0xFF2F2F2F)
-                                      : const Color(0xFFDBDBDB),
-                                  width: 0.5,
-                                ),
-                              ),
-                              child: ClipOval(
-                                child: user['avatar_url'] != null &&
-                                        user['avatar_url'].toString().isNotEmpty
-                                    ? Image.network(
-                                        user['avatar_url'],
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return Container(
-                                            color: Colors.grey.shade200,
-                                            child: const Icon(
-                                              Icons.person,
-                                              color: Colors.grey,
-                                              size: 32,
-                                            ),
-                                          );
-                                        },
-                                      )
-                                    : Container(
-                                        color: Colors.grey.shade200,
-                                        child: const Icon(
-                                          Icons.person,
-                                          color: Colors.grey,
-                                          size: 32,
-                                        ),
-                                      ),
-                              ),
+                            // Avatar with online indicator
+                            UserAvatar(
+                              avatarUrl: user['avatar_url']?.toString(),
+                              size: 56,
+                              isOnline: user['is_online'] == true,
                             ),
                             const SizedBox(width: 12),
                             // Name and Last Message

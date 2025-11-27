@@ -5,7 +5,21 @@ class AuthService {
 
   // sign in with email and password
   Future<AuthResponse> signInWithEmailPassword(String email, String password) async {
-    return await _supabase.auth.signInWithPassword(email: email, password: password);
+    final response = await _supabase.auth.signInWithPassword(email: email, password: password);
+    
+    // Update is_online to true when user signs in
+    if (response.user != null) {
+      try {
+        await _supabase
+            .from('users')
+            .update({'is_online': true})
+            .eq('id', response.user!.id);
+      } catch (e) {
+        print('Lỗi update is_online khi login: $e');
+      }
+    }
+    
+    return response;
   }
 
   // sign up with email and password
@@ -38,6 +52,19 @@ class AuthService {
 
   // sign out
   Future<void> singOut() async {
+    // Update is_online to false when user signs out
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId != null) {
+      try {
+        await _supabase
+            .from('users')
+            .update({'is_online': false})
+            .eq('id', userId);
+      } catch (e) {
+        print('Lỗi update is_online khi logout: $e');
+      }
+    }
+    
     await _supabase.auth.signOut();
   }
 

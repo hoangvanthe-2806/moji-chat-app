@@ -104,4 +104,50 @@ class ChatService {
       }
     }
   }
+
+  /// Xóa conversation và tất cả messages liên quan
+  Future<void> deleteConversation(String conversationId) async {
+    try {
+      // Xóa tất cả messages trong conversation trước
+      final deleteMessagesResult = await _supabase
+          .from('messages')
+          .delete()
+          .eq('conversation_id', conversationId);
+      print("✅ Đã xóa messages: $deleteMessagesResult");
+      
+      // Sau đó xóa conversation
+      final deleteConvResult = await _supabase
+          .from('conversations')
+          .delete()
+          .eq('id', conversationId);
+      print("✅ Đã xóa conversation: $deleteConvResult");
+    } catch (e) {
+      print("❌ Lỗi khi xóa conversation: $e");
+      rethrow;
+    }
+  }
+
+  /// Xóa một message (chỉ user gửi mới xóa được)
+  Future<void> deleteMessage(String messageId, String userId) async {
+    // Kiểm tra message có phải của user này không
+    final message = await _supabase
+        .from('messages')
+        .select('sender_id')
+        .eq('id', messageId)
+        .maybeSingle();
+    
+    if (message == null) {
+      throw Exception('Tin nhắn không tồn tại');
+    }
+    
+    if (message['sender_id'] != userId) {
+      throw Exception('Bạn không có quyền xóa tin nhắn này');
+    }
+    
+    // Xóa message
+    await _supabase
+        .from('messages')
+        .delete()
+        .eq('id', messageId);
+  }
 }
