@@ -296,9 +296,9 @@ This project is licensed under the MIT License.
 
 ## 👤 Author
 
-**Your Name**
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: your.email@example.com
+**hoangthedevhoangthedev**
+- GitHub: [@hoangvanthe-2806](https://github.com/hoangvanthe-2806)
+- Email: hoangthe2862003@gmail.com
 
 ---
 
