@@ -20,54 +20,128 @@ class HomeScreen extends StatelessWidget {
         builder: (context, state) {
           final pages = [
             ChatListScreen(),
-            FriendListScreen(), // ✅ Thêm tab bạn bè
+            FriendListScreen(),
             ProfileScreen(),
             SettingScreen(),
           ];
 
+          // Tên tab tương ứng
+          final tabTitles = ['Chat', 'Friends', 'Profile', 'Settings'];
+          final tabIcons = [
+            Icons.chat_bubble_outline,
+            Icons.people_outline,
+            Icons.person_outline,
+            Icons.settings_outlined,
+          ];
+          final selectedTabIcons = [
+            Icons.chat_bubble,
+            Icons.people,
+            Icons.person,
+            Icons.settings,
+          ];
+
+          // Tên section theo tab
+          final sectionTitles = ['Chats', 'Friends', 'Profile', 'Settings'];
+
+          final theme = Theme.of(context);
+          final isDark = theme.brightness == Brightness.dark;
+          
           return Scaffold(
+            backgroundColor: theme.scaffoldBackgroundColor,
+            // AppBar đơn giản, nhẹ nhàng như Instagram
             appBar: AppBar(
-              title: const Text('Moji'),
+              elevation: 0,
+              backgroundColor: theme.colorScheme.surface,
+              title: Row(
+                children: [
+                  Text(
+                    'Moji',
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    sectionTitles[state],
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w400,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
+              ),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.search),
+                  icon: Icon(
+                    Icons.search,
+                    color: theme.colorScheme.onSurface,
+                    size: 28,
+                  ),
                   onPressed: () {
                     Navigator.pushNamed(context, SearchScreen.route);
                   },
                 ),
+                const SizedBox(width: 8),
               ],
             ),
-            body: pages[state],
-            bottomNavigationBar: BottomNavigationBar(
-              type: BottomNavigationBarType.fixed,
-              currentIndex: state,
-              selectedItemColor: Colors.blue, // ✅ Màu khi chọn
-              unselectedItemColor: Colors.grey, // ✅ Màu khi chưa chọn
-              showUnselectedLabels: true,
-              onTap: (index) {
-                print("Clicked index: $index");
-                context.read<HomeCubit>().changeTab(index);
-              },
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.chat),
-                  label: 'Chat',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.people),
-                  label: 'Friends',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person),
-                  label: 'Profile',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.settings),
-                  label: 'Settings',
-                ),
-              ],
+            
+            body: Container(
+              color: theme.scaffoldBackgroundColor,
+              child: pages[state],
             ),
-
+            
+            // Bottom Navigation Bar đơn giản như Instagram
+            bottomNavigationBar: Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                border: Border(
+                  top: BorderSide(
+                    color: isDark 
+                        ? const Color(0xFF2F2F2F)
+                        : const Color(0xFFDBDBDB),
+                    width: 0.5,
+                  ),
+                ),
+              ),
+              child: BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
+                currentIndex: state,
+                selectedItemColor: theme.colorScheme.onSurface,
+                unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.6),
+                selectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.w400,
+                  fontSize: 12,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontWeight: FontWeight.w400,
+                  fontSize: 12,
+                ),
+                backgroundColor: theme.colorScheme.surface,
+                elevation: 0,
+                showSelectedLabels: true,
+                showUnselectedLabels: true,
+                onTap: (index) {
+                  context.read<HomeCubit>().changeTab(index);
+                },
+                items: List.generate(
+                  tabTitles.length,
+                  (index) => BottomNavigationBarItem(
+                    icon: Icon(
+                      state == index
+                          ? selectedTabIcons[index]
+                          : tabIcons[index],
+                      size: 28,
+                    ),
+                    label: tabTitles[index],
+                  ),
+                ),
+              ),
+            ),
           );
         },
       ),

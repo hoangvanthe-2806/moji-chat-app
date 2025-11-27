@@ -18,10 +18,22 @@ class FriendListCubit extends Cubit<FriendListState> {
   }
   Future<void> removeFriend(String friendId) async {
     try {
+      if (friendId.isEmpty) {
+        emit(FriendListError('Friend ID không hợp lệ'));
+        return;
+      }
+      
       await _service.removeFriend(friendId);
-      await loadFriends(); // tải lại danh sách sau khi xóa
+      // Tải lại danh sách sau khi xóa thành công
+      await loadFriends();
     } catch (e) {
       emit(FriendListError(e.toString()));
+      // Re-emit state hiện tại để không mất dữ liệu
+      // Nếu đang ở trạng thái loaded, giữ nguyên state đó
+      final currentState = state;
+      if (currentState is FriendListLoaded) {
+        // Không cần làm gì, error đã được emit
+      }
     }
   }
 }

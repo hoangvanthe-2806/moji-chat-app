@@ -31,6 +31,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   void initState() {
     super.initState();
     _messageStream = _chatService.streamMessages(widget.conversationId);
+    // Đánh dấu tất cả tin nhắn là đã đọc khi vào màn hình
+    _markMessagesAsRead();
+  }
+
+  Future<void> _markMessagesAsRead() async {
+    try {
+      await _chatService.markMessagesAsRead(
+        conversationId: widget.conversationId,
+        userId: widget.senderId,
+      );
+    } catch (e) {
+      print('Lỗi đánh dấu tin nhắn đã đọc: $e');
+    }
   }
 
   Future<void> _sendMessage() async {

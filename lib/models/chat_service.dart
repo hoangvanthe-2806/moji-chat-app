@@ -75,7 +75,33 @@ class ChatService {
       'sender_id': senderId,
       'content': content,
       'image_url': imageUrl,
+      'read_by': [senderId], // Tin nhắn mình gửi tự động đánh dấu đã đọc
     };
     await _supabase.from('messages').insert(payload);
+  }
+
+  /// Đánh dấu tất cả tin nhắn trong conversation là đã đọc bởi userId
+  Future<void> markMessagesAsRead({
+    required String conversationId,
+    required String userId,
+  }) async {
+    // Lấy tất cả tin nhắn chưa đọc (chưa có userId trong read_by)
+    final unreadMessages = await _supabase
+        .from('messages')
+        .select('id, read_by')
+        .eq('conversation_id', conversationId)
+        .neq('sender_id', userId); // Chỉ đánh dấu tin nhắn không phải từ mình
+
+    // Cập nhật từng tin nhắn: thêm userId vào mảng read_by nếu chưa có
+    for (var msg in unreadMessages) {
+      final readBy = (msg['read_by'] as List<dynamic>?) ?? [];
+      if (!readBy.contains(userId)) {
+        final updatedReadBy = [...readBy, userId];
+        await _supabase
+            .from('messages')
+            .update({'read_by': updatedReadBy})
+            .eq('id', msg['id']);
+      }
+    }
   }
 }

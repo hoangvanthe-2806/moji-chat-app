@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
 
 import 'auth/auth_gate.dart';
 import 'routes.dart';
+import 'services/ThemeService.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,14 +23,54 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Chat App',
-      debugShowCheckedModeBanner: false,
-      // AuthGate là entrypoint -> quyết định render LoginScreen hoặc HomeScreen
-      home:  AuthGate(),
-
-
-      onGenerateRoute: mainRoute,
+    return ChangeNotifierProvider(
+      create: (_) => ThemeService(),
+      child: Consumer<ThemeService>(
+        builder: (context, themeService, _) {
+          return MaterialApp(
+            title: 'Chat App',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              useMaterial3: true,
+              brightness: Brightness.light,
+              colorScheme: ColorScheme.light(
+                primary: const Color(0xFF0095F6),
+                surface: Colors.white,
+                background: const Color(0xFFFAFAFA),
+                onSurface: const Color(0xFF262626),
+                onBackground: const Color(0xFF262626),
+              ),
+              scaffoldBackgroundColor: const Color(0xFFFAFAFA),
+              appBarTheme: const AppBarTheme(
+                elevation: 0,
+                backgroundColor: Colors.white,
+                foregroundColor: Color(0xFF262626),
+              ),
+            ),
+            darkTheme: ThemeData(
+              useMaterial3: true,
+              brightness: Brightness.dark,
+              colorScheme: ColorScheme.dark(
+                primary: const Color(0xFF0095F6),
+                surface: const Color(0xFF1A1A1A),
+                background: Colors.black,
+                onSurface: Colors.white,
+                onBackground: Colors.white,
+              ),
+              scaffoldBackgroundColor: Colors.black,
+              appBarTheme: const AppBarTheme(
+                elevation: 0,
+                backgroundColor: Color(0xFF1A1A1A),
+                foregroundColor: Colors.white,
+              ),
+            ),
+            themeMode: themeService.themeMode,
+            // AuthGate là entrypoint -> quyết định render LoginScreen hoặc HomeScreen
+            home: const AuthGate(),
+            onGenerateRoute: mainRoute,
+          );
+        },
+      ),
     );
   }
 }

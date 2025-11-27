@@ -155,12 +155,44 @@ class FriendService {
   }
   /// ❌ Xóa bạn bè
   Future<void> removeFriend(String friendId) async {
-    final myId = _supabase.auth.currentUser!.id;
+    if (friendId.isEmpty) {
+      throw Exception('Friend ID không hợp lệ');
+    }
 
-    // Xóa 2 chiều: mình với họ, họ với mình
-    await _supabase.from('friends')
-        .delete()
-        .or('and(user_id.eq.$myId,friend_id.eq.$friendId),and(user_id.eq.$friendId,friend_id.eq.$myId)');
+    final myId = _supabase.auth.currentUser?.id;
+    if (myId == null) {
+      throw Exception('Không tìm thấy user hiện tại');
+    }
+
+    if (myId == friendId) {
+      throw Exception('Không thể xóa chính mình');
+    }
+
+    try {
+      // Xóa 2 chiều: mình với họ, họ với mình
+      // Cách 1: Xóa từng record riêng biệt (an toàn hơn)
+      await _supabase
+          .from('friends')
+          .delete()
+          .eq('user_id', myId)
+          .eq('friend_id', friendId);
+
+      await _supabase
+          .from('friends')
+          .delete()
+          .eq('user_id', friendId)
+          .eq('friend_id', myId);
+
+      // Hoặc có thể dùng cách 2 với .or() nhưng cần đúng cú pháp:
+      // await _supabase
+      //     .from('friends')
+      //     .delete()
+      //     .or('user_id.eq.$myId,friend_id.eq.$friendId')
+      //     .or('user_id.eq.$friendId,friend_id.eq.$myId');
+    } catch (e) {
+      print('Lỗi chi tiết khi xóa bạn bè: $e');
+      throw Exception('Lỗi khi xóa bạn bè: ${e.toString()}');
+    }
   }
 
 }

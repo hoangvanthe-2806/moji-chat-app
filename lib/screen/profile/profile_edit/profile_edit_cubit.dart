@@ -34,22 +34,42 @@ class ProfileEditCubit extends Cubit<ProfileEditState> {
 
       // Nếu có chọn ảnh thì upload lên Storage
       if (_selectedImage != null) {
-        final fileExt = _selectedImage!.path.split('.').last;
-        final fileName = "$userId.$fileExt";
+        try {
+          final fileExt = _selectedImage!.path.split('.').last;
+          final fileName = "$userId.$fileExt";
 
-        final storagePath = await _supabase.storage
-            .from('avatars')
-            .upload(fileName, _selectedImage!, fileOptions: const FileOptions(upsert: true));
+          // Upload file lên Supabase Storage
+          await _supabase.storage
+              .from('avatars')
+              .upload(
+                fileName,
+                _selectedImage!,
+                fileOptions: const FileOptions(
+                  upsert: true,
+                  cacheControl: '3600',
+                ),
+              );
 
-        avatarUrl = _supabase.storage.from('avatars').getPublicUrl(fileName);
+          // Lấy public URL
+          avatarUrl = _supabase.storage.from('avatars').getPublicUrl(fileName);
+        } catch (storageError) {
+          // Nếu lỗi storage, vẫn cho phép update name và bio
+          print("Lỗi upload ảnh: $storageError");
+          // Có thể emit warning nhưng vẫn tiếp tục
+        }
       }
 
       // Update bảng users
-      await _supabase.from('users').update({
+      final updateData = <String, dynamic>{
         'name': name,
         'bio': bio,
-        if (avatarUrl != null) 'avatar_url': avatarUrl,
-      }).eq('id', userId);
+      };
+      
+      if (avatarUrl != null) {
+        updateData['avatar_url'] = avatarUrl;
+      }
+
+      await _supabase.from('users').update(updateData).eq('id', userId);
 
       emit(ProfileEditSuccess());
     } catch (e) {
